@@ -24,7 +24,7 @@
     <h2 id="titoloPagina">Prenotazione Incontro</h2>
     
     <div id="selezioneCatechista" class="form-group" style="display:none;">
-        <label id="labelRuolo" for="catechista">Seleziona Catechista:</label>
+        <label id="labelRuolo" for="catechista">Seleziona Referente:</label>
         <select id="catechista" onchange="caricaDate()"></select>
     </div>
 
@@ -50,62 +50,44 @@
 </div>
 
 <script>
-    // --- LINK WEB APP ---
-    const webAppUrl = "https://script.google.com/macros/s/AKfycbwvq_yVzd2WfJUqmLgQMXXhagjE5GQ2-WKfx8M5dmpIMuneIFbxu65gL5f5tSkvREGM/exec";
+    // --- CONFIGURAZIONE ---
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbw75cKfzFCUkjbOoEmNuHGaWOJgJnAkFA-GiyHfxmoRkF6rUWmlw3Lt4uf1tsBaXgC-/exec";
 
-    // --- CONFIGURAZIONE GRUPPI DIVISI ---
-    const mappaturaCatechisti = {
-        "3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
-        "5/6/7": ["Grazia e Rosaria", "Antonia e Rosanna"]
+    const referenti = {
+        "3Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
+        "5-6-7": ["Grazia e Rosaria", "Antonia e Rosanna"]
     };
 
     const urlParams = new URLSearchParams(window.location.search);
-    const gruppo = urlParams.get('gruppo') || "Catechismo";
     const classe = urlParams.get('classe');
     const diviso = urlParams.get('diviso');
+    const gruppo = urlParams.get('gruppo') || "Incontro";
 
-    // Imposta Titolo
     document.getElementById('titoloPagina').innerText = "Prenotazione " + (classe || "Incontro");
-    document.getElementById('labelRuolo').innerText = (gruppo === "ACR") ? "Seleziona Educatore:" : "Seleziona Catechista:";
 
-    // Gestione Menu a tendina per classi divise
-    if (diviso === 'si' && mappaturaCatechisti[classe]) {
+    if (diviso === 'si' && referenti[classe]) {
         document.getElementById('selezioneCatechista').style.display = 'block';
-        const selectCat = document.getElementById('catechista');
-        selectCat.innerHTML = "";
-        mappaturaCatechisti[classe].forEach(cat => {
-            let opt = document.createElement('option');
-            opt.value = cat;
-            opt.innerHTML = cat;
-            selectCat.appendChild(opt);
-        });
+        const sel = document.getElementById('catechista');
+        referenti[classe].forEach(c => sel.add(new Option(c, c)));
     }
 
-    // Carica le date dal Foglio Google
     async function caricaDate() {
         const selectData = document.getElementById('dataOra');
         selectData.innerHTML = "<option>Caricamento...</option>";
-        const catScelto = (diviso === 'si') ? document.getElementById('catechista').value : "";
+        const catScelto = document.getElementById('catechista').value;
         
         try {
-            const response = await fetch(`${webAppUrl}?classe=${encodeURIComponent(classe)}`);
+            const response = await fetch(`${webAppUrl}?classe=${classe}`);
             const date = await response.json();
             selectData.innerHTML = "";
             
-            // Filtra per catechista se la classe è divisa
-            const filtrate = date.filter(d => {
-                if (diviso !== 'si') return true;
-                return d.catechista.trim() === catScelto.trim();
-            });
+            const filtrate = date.filter(d => diviso !== 'si' || d.catechista.trim() === catScelto.trim());
             
             if (filtrate.length === 0) {
                 selectData.innerHTML = "<option value=''>Nessuna data disponibile</option>";
             } else {
                 filtrate.forEach(d => {
-                    let opt = document.createElement('option');
-                    opt.value = d.ora;
-                    opt.innerHTML = d.data + " - ore " + d.ora + " (" + (d.luogo || "") + ")";
-                    selectData.appendChild(opt);
+                    selectData.add(new Option(`${d.data} - ore ${d.ora} (${d.luogo || ''})`, d.ora));
                 });
             }
         } catch (e) { 
@@ -113,17 +95,16 @@
         }
     }
 
-    // Invia Prenotazione
     async function inviaPrenotazione() {
         const oraScelta = document.getElementById('dataOra').value;
         const genitore = document.getElementById('genitore').value;
         const figlio = document.getElementById('figlio').value;
         const msgDiv = document.getElementById('messaggio');
 
-        if (!oraScelta || !genitore || !figlio) { alert("Compila tutti i campi!"); return; }
+        if (!oraScelta || !genitore || !figlio) { alert("Completa tutti i campi"); return; }
         
         msgDiv.innerText = "Invio in corso...";
-        const params = new URLSearchParams({ classe, ora: oraScelta, genitore, figlio, gruppo });
+        const params = new URLSearchParams({ classe, ora: oraScelta, genitore, figlio });
 
         try {
             const response = await fetch(webAppUrl, { method: 'POST', body: params });
