@@ -3,177 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prenotazione Incontri - Parrocchia</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Prenotazione Incontri - Parrocchia Maria Immacolata</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --glass: rgba(255, 255, 255, 0.95); --text: #1e293b; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientBG 15s ease infinite; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .container { background: var(--glass); backdrop-filter: blur(12px); padding: 30px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); width: 100%; max-width: 450px; border: 1px solid rgba(255, 255, 255, 0.6); }
-        h2 { text-align: center; font-weight: 800; color: #0f172a; margin-bottom: 20px; }
-        .step-label { font-weight: 700; font-size: 0.75rem; color: #4f46e5; text-transform: uppercase; margin-bottom: 8px; display: block; }
-        input, select { width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #e2e8f0; border-radius: 14px; font-size: 1rem; outline: none; box-sizing: border-box; }
-        button { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        button:disabled { background: #cbd5e1; cursor: not-allowed; }
-        .hidden { display: none; }
-        .spinner { border: 4px solid rgba(0,0,0,0.05); border-top: 4px solid #6366f1; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .status-card { text-align: center; padding: 20px; border-radius: 14px; margin-top: 20px; font-weight: 700; border: 1px solid transparent; }
-        .success { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        :root { --primary-color: #2c3e50; --accent-color: #3498db; --bg-color: #f4f7f6; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { text-align: center; color: var(--primary-color); margin-bottom: 25px; font-weight: 600; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: 400; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background-color: var(--accent-color); color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background-color: #2980b9; }
+        #messaggio { margin-top: 15px; text-align: center; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 id="titolo">Prenotazione</h2>
-    
-    <div id="sezioneCatechista" class="hidden">
-        <span class="step-label">👤 Seleziona con chi vuoi andare</span>
-        <select id="selectCatechista"><option value="">-- Scegli con chi vuoi andare --</option></select>
+    <h2 id="titoloPagina">Prenotazione Incontro</h2>
+    <div id="selezioneCatechista" class="form-group" style="display:none;">
+        <label id="labelRuolo" for="catechista">Seleziona:</label>
+        <select id="catechista" onchange="caricaDate()"></select>
     </div>
-
-    <div id="loadingMsg" class="hidden">
-        <div class="spinner"></div>
-        <p style="text-align:center;">Caricamento date disponibili...</p>
+    <div class="form-group">
+        <label for="dataOra">Seleziona Data e Ora:</label>
+        <select id="dataOra">
+            <option value="">Caricamento date...</option>
+        </select>
     </div>
-
-    <form id="bookingForm" class="hidden">
-        <span class="step-label">📝 Dati Genitore e Figlio</span>
-        <input type="text" id="genitore" placeholder="Nome Genitore" required>
-        <input type="text" id="figlio" placeholder="Nome Figlio" required>
-
-        <span class="step-label">📅 Giorno dell'incontro</span>
-        <select id="selectData" required><option value="">-- Scegli giorno --</option></select>
-        
-        <span class="step-label">🕒 Ora e Luogo</span>
-        <select id="selectOra" required disabled><option value="">-- Scegli ora --</option></select>
-
-        <button type="submit" id="btnInvia">Conferma Appuntamento</button>
-    </form>
-    <div id="status" class="status-card hidden"></div>
+    <div class="form-group">
+        <label for="genitore">Nome e Cognome Genitore:</label>
+        <input type="text" id="genitore" placeholder="Esempio: Mario Rossi">
+    </div>
+    <div class="form-group">
+        <label for="figlio">Nome e Cognome Figlio/a:</label>
+        <input type="text" id="figlio" placeholder="Esempio: Luigi Rossi">
+    </div>
+    <button onclick="inviaPrenotazione()">Conferma Prenotazione</button>
+    <div id="messaggio"></div>
 </div>
 
 <script>
-    // Link del tuo Google Script
-    const webAppUrl = "https://script.google.com/macros/s/AKfycbyKvZLbyQqacIACXI2_N3jtTUQAwuYo4TD1OU_js0U3B_29cUr5gmOn7ro7lmdbydWS/exec";
-    
+    // --- CONFIGURAZIONE ---
+    const webAppUrl = "INCOLLA_QUI_IL_TUO_NUOVO_LINK_EXEC";
+
+    const mappaturaCatechisti = {
+        "Catechismo-3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
+        "ACR-5/6/7": ["Grazia e Rosaria", "Antonia e Rosanna"]
+    };
+
     const urlParams = new URLSearchParams(window.location.search);
     const gruppo = urlParams.get('gruppo') || "Catechismo";
-    const classeVal = urlParams.get('classe') || "Classe";
-    const nomeFoglio = gruppo + "-" + classeVal;
-    let datiRicevuti = [];
+    const classe = urlParams.get('classe');
+    const diviso = urlParams.get('diviso');
 
-    // MAPPATURA AGGIORNATA PER EVITARE COLLISIONI
-    const mappaturaCatechisti = {
-        "ACR-5/6/7": ["Califano Rosaria e Petrosino Grazia Pia", "Pica Rosanna e Sica Antonia"],
-        "Catechismo-3°Elementare": [
-            "Attanasio Anna", 
-            "Iannotti Luigi e Mellone Francesca Pia", 
-            "Barbaro Chiara, Contaldi Giuliana e Sbisà Rossella"
-        ],
-        "Catechismo-4°Elementare": ["Cupido Tina e Ianne Tiziana", "Monaco Carmela e Paglietta Valentina"]
-    };
+    document.getElementById('titoloPagina').innerText = "Prenotazione " + gruppo + " - " + classe;
+    document.getElementById('labelRuolo').innerText = (gruppo === "ACR") ? "Seleziona Educatore:" : "Seleziona Catechista:";
 
-    document.getElementById('titolo').innerText = "Prenotazione " + classeVal;
-
-    // Se la classe è divisa, mostra il menu catechisti
-    if (urlParams.get('diviso') === 'si' && mappaturaCatechisti[nomeFoglio]) {
-        const select = document.getElementById('selectCatechista');
-        document.getElementById('sezioneCatechista').classList.remove('hidden');
-        mappaturaCatechisti[nomeFoglio].forEach(cat => {
-            let opt = document.createElement('option'); opt.value = cat; opt.text = cat;
-            select.appendChild(opt);
+    if (diviso === 'si') {
+        document.getElementById('selezioneCatechista').style.display = 'block';
+        const selectCat = document.getElementById('catechista');
+        mappaturaCatechisti[classe].forEach(cat => {
+            let opt = document.createElement('option');
+            opt.value = cat;
+            opt.innerHTML = cat;
+            selectCat.appendChild(opt);
         });
-    } else {
-        caricaDati(""); 
     }
 
-    document.getElementById('selectCatechista').onchange = function() {
-        if (this.value) caricaDati(this.value);
-    };
-
-    async function caricaDati(catScelto) {
-        document.getElementById('loadingMsg').classList.remove('hidden');
-        document.getElementById('bookingForm').classList.add('hidden');
-        document.getElementById('status').classList.add('hidden');
+    async function caricaDate() {
+        const selectData = document.getElementById('dataOra');
+        selectData.innerHTML = "<option>Caricamento...</option>";
+        const catScelto = (diviso === 'si') ? document.getElementById('catechista').value : "";
+        
         try {
-            const resp = await fetch(`${webAppUrl}?classe=${encodeURIComponent(nomeFoglio)}`);
-            const allData = await resp.json();
+            const response = await fetch(`${webAppUrl}?classe=${classe}`);
+            const date = await response.json();
+            selectData.innerHTML = "";
+            const filtrate = date.filter(d => diviso !== 'si' || d.catechista === catScelto);
             
-            // FILTRO RIGOROSO PER CATECHISTA
-            if (catScelto === "") {
-                datiRicevuti = allData;
+            if (filtrate.length === 0) {
+                selectData.innerHTML = "<option value=''>Nessuna data disponibile</option>";
             } else {
-                datiRicevuti = allData.filter(item => {
-                    let nFoglio = item.catechista ? item.catechista.trim().toLowerCase() : "";
-                    let nSito = catScelto.trim().toLowerCase();
-                    return nFoglio === nSito;
+                filtrate.forEach(d => {
+                    let opt = document.createElement('option');
+                    opt.value = d.ora;
+                    opt.innerHTML = `${d.data} - ore ${d.ora} (${d.luogo})`;
+                    selectData.appendChild(opt);
                 });
             }
+        } catch (e) { selectData.innerHTML = "<option>Errore nel caricamento</option>"; }
+    }
 
-            if (datiRicevuti.length === 0) {
-                alert("Nessun orario disponibile per la selezione effettuata.");
-                document.getElementById('loadingMsg').classList.add('hidden');
-                return;
-            }
+    async function inviaPrenotazione() {
+        const oraScelta = document.getElementById('dataOra').value;
+        const genitore = document.getElementById('genitore').value;
+        const figlio = document.getElementById('figlio').value;
+        const msgDiv = document.getElementById('messaggio');
 
-            // Popola le date uniche
-            const selData = document.getElementById('selectData');
-            selData.innerHTML = '<option value="">-- Scegli giorno --</option>';
-            const dateUniche = [...new Set(datiRicevuti.map(item => item.data))];
-            dateUniche.forEach(d => {
-                let opt = document.createElement('option'); opt.value = d; opt.text = d;
-                selData.appendChild(opt);
-            });
+        if (!oraScelta || !genitore || !figlio) { alert("Completa tutti i campi"); return; }
+        
+        msgDiv.innerText = "Invio in corso...";
+        const params = new URLSearchParams({ classe, ora: oraScelta, genitore, figlio, gruppo });
 
-            document.getElementById('loadingMsg').classList.add('hidden');
-            document.getElementById('bookingForm').classList.remove('hidden');
-        } catch(e) { 
-            alert("Errore nel caricamento dei dati. Riprova più tardi."); 
-            document.getElementById('loadingMsg').classList.add('hidden');
+        try {
+            const response = await fetch(webAppUrl, { method: 'POST', body: params });
+            const result = await response.text();
+            if (result === "OK") {
+                msgDiv.style.color = "green";
+                msgDiv.innerText = "Prenotazione confermata! Riceverai un'email.";
+                setTimeout(() => location.reload(), 3000);
+            } else { throw new Error(); }
+        } catch (e) {
+            msgDiv.style.color = "red";
+            msgDiv.innerText = "Errore durante la prenotazione. Riprova.";
         }
     }
 
-    document.getElementById('selectData').onchange = function() {
-        const selOra = document.getElementById('selectOra');
-        selOra.innerHTML = '<option value="">-- Scegli ora --</option>';
-        datiRicevuti.filter(i => i.data === this.value).forEach(i => {
-            let opt = document.createElement('option');
-            opt.value = i.ora;
-            opt.text = i.ora + (i.luogo ? " (" + i.luogo + ")" : "");
-            selOra.appendChild(opt);
-        });
-        selOra.disabled = false;
-    };
-
-    document.getElementById('bookingForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnInvia');
-        btn.disabled = true; btn.innerText = "Salvataggio...";
-        const params = new URLSearchParams({
-            genitore: document.getElementById('genitore').value,
-            figlio: document.getElementById('figlio').value,
-            ora: document.getElementById('selectOra').value,
-            classe: nomeFoglio
-        });
-        try {
-            const r = await fetch(webAppUrl, { method: 'POST', body: params });
-            if (await r.text() === "OK") {
-                const stat = document.getElementById('status');
-                stat.innerHTML = "✅ Prenotazione effettuata! Grazie.";
-                stat.className = "status-card success";
-                stat.classList.remove('hidden');
-                document.getElementById('bookingForm').classList.add('hidden');
-                document.getElementById('sezioneCatechista').classList.add('hidden');
-            } else {
-                alert("Errore: il posto potrebbe essere stato appena occupato.");
-                btn.disabled = false; btn.innerText = "Conferma Appuntamento";
-            }
-        } catch(e) { 
-            alert("Errore durante l'invio. Controlla la connessione."); 
-            btn.disabled = false; btn.innerText = "Conferma Appuntamento";
-        }
-    };
+    caricaDate();
 </script>
 </body>
 </html>
