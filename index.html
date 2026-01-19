@@ -22,30 +22,35 @@
 
 <div class="container">
     <h2 id="titoloPagina">Prenotazione Incontro</h2>
+    
     <div id="selezioneCatechista" class="form-group" style="display:none;">
         <label id="labelRuolo" for="catechista">Seleziona:</label>
         <select id="catechista" onchange="caricaDate()"></select>
     </div>
+
     <div class="form-group">
         <label for="dataOra">Seleziona Data e Ora:</label>
         <select id="dataOra">
             <option value="">Caricamento date...</option>
         </select>
     </div>
+
     <div class="form-group">
         <label for="genitore">Nome e Cognome Genitore:</label>
         <input type="text" id="genitore" placeholder="Esempio: Mario Rossi">
     </div>
+
     <div class="form-group">
         <label for="figlio">Nome e Cognome Figlio/a:</label>
         <input type="text" id="figlio" placeholder="Esempio: Luigi Rossi">
     </div>
+
     <button onclick="inviaPrenotazione()">Conferma Prenotazione</button>
     <div id="messaggio"></div>
 </div>
 
 <script>
-    // --- CONFIGURAZIONE ---
+    // --- 1. CONFIGURAZIONE ---
     const webAppUrl = "https://script.google.com/macros/s/AKfycbwvPG_6frmfcHtZw6qPrR9avn76WVbK-MxvkS524TPzDQgNDkol9kdi8oCb8gyzLO9g/exec";
 
     const mappaturaCatechisti = {
@@ -58,12 +63,14 @@
     const classe = urlParams.get('classe');
     const diviso = urlParams.get('diviso');
 
-    document.getElementById('titoloPagina').innerText = "Prenotazione " + gruppo + " - " + classe;
+    // --- 2. INIZIALIZZAZIONE PAGINA ---
+    document.getElementById('titoloPagina').innerText = "Prenotazione " + gruppo + " - " + (classe || "");
     document.getElementById('labelRuolo').innerText = (gruppo === "ACR") ? "Seleziona Educatore:" : "Seleziona Catechista:";
 
-    if (diviso === 'si') {
+    if (diviso === 'si' && mappaturaCatechisti[classe]) {
         document.getElementById('selezioneCatechista').style.display = 'block';
         const selectCat = document.getElementById('catechista');
+        selectCat.innerHTML = "";
         mappaturaCatechisti[classe].forEach(cat => {
             let opt = document.createElement('option');
             opt.value = cat;
@@ -72,16 +79,21 @@
         });
     }
 
+    // --- 3. CARICAMENTO DATE ---
     async function caricaDate() {
         const selectData = document.getElementById('dataOra');
-        selectData.innerHTML = "<option>Caricamento...</option>";
+        selectData.innerHTML = "<option>Caricamento date...</option>";
         const catScelto = (diviso === 'si') ? document.getElementById('catechista').value : "";
         
         try {
-            const response = await fetch(`${webAppUrl}?classe=${classe}`);
+            const response = await fetch(`${webAppUrl}?classe=${encodeURIComponent(classe)}`);
             const date = await response.json();
             selectData.innerHTML = "";
-            const filtrate = date.filter(d => diviso !== 'si' || d.catechista === catScelto);
+            
+            const filtrate = date.filter(d => {
+                if (diviso !== 'si') return true;
+                return d.catechista.trim() === catScelto.trim();
+            });
             
             if (filtrate.length === 0) {
                 selectData.innerHTML = "<option value=''>Nessuna data disponibile</option>";
@@ -93,9 +105,12 @@
                     selectData.appendChild(opt);
                 });
             }
-        } catch (e) { selectData.innerHTML = "<option>Errore nel caricamento</option>"; }
+        } catch (e) { 
+            selectData.innerHTML = "<option>Errore nel caricamento</option>"; 
+        }
     }
 
+    // --- 4. INVIO PRENOTAZIONE ---
     async function inviaPrenotazione() {
         const oraScelta = document.getElementById('dataOra').value;
         const genitore = document.getElementById('genitore').value;
