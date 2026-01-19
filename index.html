@@ -50,9 +50,10 @@
 </div>
 
 <script>
-    // --- CONFIGURAZIONE ---
+    // --- 1. CONFIGURAZIONE ---
     const webAppUrl = "https://script.google.com/macros/s/AKfycbwvq_yVzd2WfJUqmLgQMXXhagjE5GQ2-WKfx8M5dmpIMuneIFbxu65gL5f5tSkvREGM/exec";
 
+    // Mappatura esatta per i menu a tendina
     const mappaturaCatechisti = {
         "3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
         "5/6/7": ["Grazia e Rosaria", "Antonia e Rosanna"]
@@ -63,10 +64,11 @@
     const classe = urlParams.get('classe');
     const diviso = urlParams.get('diviso');
 
-    // --- LOGICA PAGINA ---
+    // --- 2. INIZIALIZZAZIONE ---
     document.getElementById('titoloPagina').innerText = "Prenotazione " + gruppo + " - " + (classe || "");
     document.getElementById('labelRuolo').innerText = (gruppo === "ACR") ? "Seleziona Educatore:" : "Seleziona Catechista:";
 
+    // Se il link ha diviso=si, mostra il menu a tendina
     if (diviso === 'si' && mappaturaCatechisti[classe]) {
         document.getElementById('selezioneCatechista').style.display = 'block';
         const selectCat = document.getElementById('catechista');
@@ -79,16 +81,19 @@
         });
     }
 
+    // --- 3. CARICAMENTO DATE ---
     async function caricaDate() {
         const selectData = document.getElementById('dataOra');
         selectData.innerHTML = "<option>Caricamento date...</option>";
         const catScelto = (diviso === 'si') ? document.getElementById('catechista').value : "";
         
         try {
+            // Usiamo encodeURIComponent per proteggere il simbolo ° nel link
             const response = await fetch(`${webAppUrl}?classe=${encodeURIComponent(classe)}`);
             const date = await response.json();
             selectData.innerHTML = "";
             
+            // Filtra le date in base al catechista se la classe è divisa
             const filtrate = date.filter(d => {
                 if (diviso !== 'si') return true;
                 return d.catechista.trim() === catScelto.trim();
@@ -109,6 +114,7 @@
         }
     }
 
+    // --- 4. INVIO DATI ---
     async function inviaPrenotazione() {
         const oraScelta = document.getElementById('dataOra').value;
         const genitore = document.getElementById('genitore').value;
