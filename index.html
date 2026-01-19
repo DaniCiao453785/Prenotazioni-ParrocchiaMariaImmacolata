@@ -50,12 +50,12 @@
 </div>
 
 <script>
-    // --- 1. CONFIGURAZIONE ---
-    const webAppUrl = "https://script.google.com/macros/s/AKfycbwvPG_6frmfcHtZw6qPrR9avn76WVbK-MxvkS524TPzDQgNDkol9kdi8oCb8gyzLO9g/exec";
+    // --- CONFIGURAZIONE ---
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbwvq_yVzd2WfJUqmLgQMXXhagjE5GQ2-WKfx8M5dmpIMuneIFbxu65gL5f5tSkvREGM/exec";
 
     const mappaturaCatechisti = {
-        "Catechismo-3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
-        "ACR-5/6/7": ["Grazia e Rosaria", "Antonia e Rosanna"]
+        "3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
+        "5/6/7": ["Grazia e Rosaria", "Antonia e Rosanna"]
     };
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -63,7 +63,7 @@
     const classe = urlParams.get('classe');
     const diviso = urlParams.get('diviso');
 
-    // --- 2. INIZIALIZZAZIONE PAGINA ---
+    // --- LOGICA PAGINA ---
     document.getElementById('titoloPagina').innerText = "Prenotazione " + gruppo + " - " + (classe || "");
     document.getElementById('labelRuolo').innerText = (gruppo === "ACR") ? "Seleziona Educatore:" : "Seleziona Catechista:";
 
@@ -79,7 +79,6 @@
         });
     }
 
-    // --- 3. CARICAMENTO DATE ---
     async function caricaDate() {
         const selectData = document.getElementById('dataOra');
         selectData.innerHTML = "<option>Caricamento date...</option>";
@@ -110,7 +109,6 @@
         }
     }
 
-    // --- 4. INVIO PRENOTAZIONE ---
     async function inviaPrenotazione() {
         const oraScelta = document.getElementById('dataOra').value;
         const genitore = document.getElementById('genitore').value;
