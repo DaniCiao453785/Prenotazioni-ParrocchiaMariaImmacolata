@@ -3,27 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prenotazioni Parrocchia</title>
+    <title>Prenotazioni Parrocchia Maria Immacolata</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #2c3e50; --secondary: #3498db; --bg: #f4f7f6; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; margin: 10px; }
-        h1 { margin-bottom: 1.5rem; font-weight: 600; font-size: 1.5rem; color: var(--primary); }
-        .info-box { background: #eef2f3; padding: 12px; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 500; }
-        .form-group { text-align: left; margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; background: #f9f9f9; }
-        button { width: 100%; padding: 14px; background: var(--secondary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #2980b9; }
-        #messaggio { margin-top: 1rem; padding: 12px; border-radius: 8px; display: none; font-weight: 500; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--primary); }
+        .container { background: white; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; margin: 15px; border-top: 5px solid var(--secondary); }
+        h1 { margin-bottom: 0.5rem; font-weight: 600; font-size: 1.6rem; color: var(--primary); }
+        .info-box { background: #eef2f3; padding: 12px; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 500; font-size: 1rem; color: #555; }
+        .form-group { text-align: left; margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; background: #fff; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--secondary); outline: none; box-shadow: 0 0 5px rgba(52, 152, 219, 0.3); }
+        button { width: 100%; padding: 14px; background: var(--secondary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 15px; }
+        button:hover { background: #2980b9; transform: translateY(-2px); }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; }
+        #messaggio { margin-top: 1.2rem; padding: 12px; border-radius: 8px; display: none; font-weight: 500; font-size: 0.95rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 id="titoloPagina">Prenotazione</h1>
-    <div class="info-box" id="infoClasse">Caricamento...</div>
+    <h1 id="titoloPagina">Prenotazione Incontro</h1>
+    <div class="info-box" id="infoClasse">Caricamento classe...</div>
 
     <form id="prenotazioneForm">
         <div class="form-group" id="containerReferente" style="display:none;">
@@ -33,14 +35,14 @@
 
         <div class="form-group">
             <label>Nome del Genitore:</label>
-            <input type="text" id="genitore" placeholder="Scrivi qui il tuo nome" required>
+            <input type="text" id="genitore" placeholder="Es: Mario Rossi" required>
         </div>
         <div class="form-group">
             <label>Nome del Figlio/a:</label>
-            <input type="text" id="figlio" placeholder="Scrivi qui il nome del bambino" required>
+            <input type="text" id="figlio" placeholder="Es: Luca Rossi" required>
         </div>
         <div class="form-group">
-            <label>Seleziona Orario:</label>
+            <label>Seleziona Giorno e Orario:</label>
             <select id="orario" required disabled>
                 <option value="">Caricamento orari...</option>
             </select>
@@ -52,7 +54,7 @@
 </div>
 
 <script>
-    // URL della tua Web App aggiornata
+    // URL Web App Script Google
     const webAppUrl = "https://script.google.com/macros/s/AKfycby7rKMPS7eGHaGVct2QS-YmNyFsGi2yHb4y5b03OqPiFYxceMpfBPfpu8OwDi8miW1o/exec";
     
     const params = new URLSearchParams(window.location.search);
@@ -60,14 +62,14 @@
     const classeBase = params.get('classe');
     const colore = params.get('colore');
 
-    // Costruisce il nome della scheda per lo script
+    // Costruisce il nome della scheda identico al database
     let nomeFoglio = gruppo + "-" + classeBase;
     if (colore) nomeFoglio += "-" + colore;
 
     document.getElementById('titoloPagina').innerText = "Prenotazione " + gruppo;
     document.getElementById('infoClasse').innerText = classeBase + (colore ? " " + colore : "");
 
-    // Gestione dei nomi per le scelte multiple (3° Blu e ACR 5/6/7)
+    // Gestione referenti multipli
     const mappaturaNomi = {
         "3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
         "5/6/7": ["Califano Rosaria e Petrosino Grazia Pia", "Pica Rosanna e Sica Antonia"]
@@ -92,19 +94,21 @@
             const selectOrario = document.getElementById('orario');
             selectOrario.innerHTML = '';
             if (orari.length === 0) {
-                selectOrario.innerHTML = '<option value="">Nessun orario disponibile</option>';
+                selectOrario.innerHTML = '<option value="">Tutti gli orari sono occupati</option>';
             } else {
-                selectOrario.innerHTML = '<option value="">Scegli una data e ora...</option>';
+                selectOrario.innerHTML = '<option value="">Scegli l\'orario...</option>';
                 orari.forEach(o => {
                     let opt = document.createElement('option');
                     opt.value = o.ora;
-                    opt.innerText = o.data + " ore " + o.ora;
+                    opt.innerText = o.data + " - Ore " + o.ora;
                     selectOrario.appendChild(opt);
                 });
                 selectOrario.disabled = false;
             }
         } catch (e) {
-            document.getElementById('infoClasse').innerText = "Errore: Foglio non trovato nel database.";
+            document.getElementById('messaggio').innerText = "Errore: il foglio '" + nomeFoglio + "' non è stato trovato.";
+            document.getElementById('messaggio').style.display = 'block';
+            document.getElementById('messaggio').style.background = "#f8d7da";
         }
     }
 
@@ -126,14 +130,17 @@
             const resp = await fetch(webAppUrl, { method: 'POST', body: formData });
             const result = await resp.text();
             if (result === "OK") {
-                msg.innerText = "Prenotazione riuscita! Riceverai un'email.";
+                msg.innerText = "Prenotazione registrata con successo!";
                 msg.style.display = "block";
                 msg.style.background = "#d4edda";
+                msg.style.color = "#155724";
                 document.getElementById('prenotazioneForm').reset();
+                caricaOrari();
             } else {
-                msg.innerText = "Errore: riprova più tardi.";
+                msg.innerText = "Errore: l'orario è stato già occupato.";
                 msg.style.display = "block";
                 msg.style.background = "#f8d7da";
+                msg.style.color = "#721c24";
             }
         } catch (err) {
             msg.innerText = "Errore di connessione.";
@@ -141,7 +148,6 @@
         } finally {
             btn.disabled = false;
             btn.innerText = "Conferma Prenotazione";
-            caricaOrari();
         }
     };
 
