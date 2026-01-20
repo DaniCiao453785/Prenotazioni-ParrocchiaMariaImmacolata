@@ -20,7 +20,6 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .status-card { text-align: center; padding: 20px; border-radius: 14px; margin-top: 20px; font-weight: 700; border: 1px solid transparent; }
         .success { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-        .error { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
     </style>
 </head>
 <body>
@@ -28,14 +27,14 @@
 <div class="container">
     <h2 id="titolo">Prenotazione</h2>
     
-    <div id="sezioneCatechista" class="hidden">
-        <span class="step-label">👤 Seleziona il Catechista</span>
-        <select id="selectCatechista"><option value="">-- Scegli il tuo catechista --</option></select>
+    <div id="sezioneReferente" class="hidden">
+        <span class="step-label" id="labelReferente">👤 Seleziona</span>
+        <select id="selectReferente"><option value="">-- Scegli --</option></select>
     </div>
 
     <div id="loadingMsg" class="hidden">
         <div class="spinner"></div>
-        <p style="text-align:center;">Caricamento date disponibili...</p>
+        <p style="text-align:center;">Caricamento disponibilità...</p>
     </div>
 
     <form id="bookingForm" class="hidden">
@@ -55,71 +54,63 @@
 </div>
 
 <script>
-    // URL aggiornato dello Script
-    const webAppUrl = "https://script.google.com/macros/s/AKfycbxcpdOCsL-7yA_s42WVYwuv33nv-ZyuIBbAxeD-WVsCO_TEdw7zCH4zp9pUD3z1SVEY/exec";
+    // URL AGGIORNATO
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbz79eC4mQs1J9lDhK0e_htwFfQN4mouY9GaDIGNeoOghltgIHkyR-yelHO74cc4oHS_/exec";
     
     const urlParams = new URLSearchParams(window.location.search);
     const gruppo = urlParams.get('gruppo') || "Catechismo";
     const classeVal = urlParams.get('classe') || "Classe";
-    const nomeFoglio = gruppo + "-" + classeVal;
+    const colore = urlParams.get('colore') ? "-" + urlParams.get('colore') : "";
+    const nomeFoglio = gruppo + "-" + classeVal + colore;
+    
+    const tipoReferente = (gruppo.toUpperCase() === "ACR") ? "Educatore" : "Catechista";
+    document.getElementById('labelReferente').innerText = "👤 Seleziona " + tipoReferente;
+    document.getElementById('titolo').innerText = "Prenotazione " + classeVal + (urlParams.get('colore') ? " (" + urlParams.get('colore') + ")" : "");
+
     let datiRicevuti = [];
 
-    const mappaturaCatechisti = {
-        "ACR-5/6/7": ["Grazia e Rosaria", "Antonia e Rosanna"],
-        "Catechismo-3°Elementare": [
-            "Attanasio Anna", 
-            "Iannotti Luigi e Mellone Francesca Pia", 
-            "Barbaro Chiara, Contaldi Giuliana e Sbisà Rossella"
-        ],
-        "Catechismo-4°Elementare": ["Cupido Tina e Ianne Tiziana", "Monaco Carmela e Paglietta Valentina"]
+    // Mappatura gruppi e nomi aggiornata
+    const mappatura = {
+        "ACR-5/6/7": ["Califano Rosaria e Petrosino Grazia Pia", "Pica Rosanna e Sica Antonia"],
+        "Catechismo-3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
+        "Catechismo-3°Elementare-Giallo": ["Barbaro Chiara, Contaldi Giuliana e Sbisà Rossella"],
+        "Catechismo-4°Elementare-Rosso": ["Cupido Tina e Ianne Tiziana"],
+        "Catechismo-4°Elementare-Verde": ["Monaco Carmela e Paglietta Valentina"]
     };
 
-    document.getElementById('titolo').innerText = "Prenotazione " + classeVal;
-
-    if (urlParams.get('diviso') === 'si' && mappaturaCatechisti[nomeFoglio]) {
-        const select = document.getElementById('selectCatechista');
-        document.getElementById('sezioneCatechista').classList.remove('hidden');
-        mappaturaCatechisti[nomeFoglio].forEach(cat => {
-            let opt = document.createElement('option'); opt.value = cat; opt.text = cat;
+    if (mappatura[nomeFoglio]) {
+        const select = document.getElementById('selectReferente');
+        document.getElementById('sezioneReferente').classList.remove('hidden');
+        mappatura[nomeFoglio].forEach(r => {
+            let opt = document.createElement('option'); opt.value = r; opt.text = r;
             select.appendChild(opt);
         });
     } else {
         caricaDati(""); 
     }
 
-    document.getElementById('selectCatechista').onchange = function() {
+    document.getElementById('selectReferente').onchange = function() {
         if (this.value) caricaDati(this.value);
     };
 
-    async function caricaDati(catScelto) {
+    async function caricaDati(refScelto) {
         document.getElementById('loadingMsg').classList.remove('hidden');
         document.getElementById('bookingForm').classList.add('hidden');
-        document.getElementById('status').classList.add('hidden');
-        
         try {
             const resp = await fetch(`${webAppUrl}?classe=${encodeURIComponent(nomeFoglio)}`);
             const allData = await resp.json();
             
-            if (catScelto === "") {
-                datiRicevuti = allData;
-            } else {
-                datiRicevuti = allData.filter(item => {
-                    let nFoglio = item.catechista ? item.catechista.trim().toLowerCase() : "";
-                    let nSito = catScelto.trim().toLowerCase();
-                    return nFoglio === nSito;
-                });
-            }
+            datiRicevuti = refScelto === "" ? allData : allData.filter(item => item.referente.trim() === refScelto.trim());
 
             if (datiRicevuti.length === 0) {
-                alert("Nessun orario disponibile per questo catechista.");
+                alert("Nessun orario disponibile al momento.");
                 document.getElementById('loadingMsg').classList.add('hidden');
                 return;
             }
 
             const selData = document.getElementById('selectData');
             selData.innerHTML = '<option value="">-- Scegli giorno --</option>';
-            const dateUniche = [...new Set(datiRicevuti.map(item => item.data))];
-            dateUniche.forEach(d => {
+            [...new Set(datiRicevuti.map(item => item.data))].forEach(d => {
                 let opt = document.createElement('option'); opt.value = d; opt.text = d;
                 selData.appendChild(opt);
             });
@@ -127,7 +118,7 @@
             document.getElementById('loadingMsg').classList.add('hidden');
             document.getElementById('bookingForm').classList.remove('hidden');
         } catch(e) { 
-            alert("Errore nel caricamento. Verifica che il nome del foglio Google sia: " + nomeFoglio); 
+            alert("Errore caricamento. Verifica il nome del foglio: " + nomeFoglio); 
             document.getElementById('loadingMsg').classList.add('hidden');
         }
     }
@@ -138,7 +129,7 @@
         datiRicevuti.filter(i => i.data === this.value).forEach(i => {
             let opt = document.createElement('option');
             opt.value = i.ora;
-            opt.text = i.ora + (i.luogo ? " (" + i.luogo + ")" : "");
+            opt.text = i.ora + " - Luogo: " + (i.luogo || "Non specificato");
             selOra.appendChild(opt);
         });
         selOra.disabled = false;
@@ -147,36 +138,32 @@
     document.getElementById('bookingForm').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnInvia');
-        const statusDiv = document.getElementById('status');
-        
-        btn.disabled = true; 
-        btn.innerText = "Salvataggio...";
+        btn.disabled = true; btn.innerText = "Salvataggio...";
         
         const params = new URLSearchParams({
             genitore: document.getElementById('genitore').value,
             figlio: document.getElementById('figlio').value,
             ora: document.getElementById('selectOra').value,
-            classe: nomeFoglio
+            classe: nomeFoglio,
+            tipo: tipoReferente
         });
 
         try {
-            // Invio tramite POST includendo i parametri nell'URL per bypassare blocchi CORS comuni con Apps Script
             const r = await fetch(`${webAppUrl}?${params.toString()}`, { method: 'POST' });
-            const resText = await r.text();
-
-            if (resText.includes("OK")) {
-                statusDiv.innerHTML = "✅ Prenotazione effettuata con successo!";
-                statusDiv.className = "status-card success";
-                statusDiv.classList.remove('hidden');
+            const res = await r.text();
+            if (res.includes("OK")) {
+                document.getElementById('status').innerHTML = "✅ Prenotazione registrata con successo!";
+                document.getElementById('status').className = "status-card success";
+                document.getElementById('status').classList.remove('hidden');
                 document.getElementById('bookingForm').classList.add('hidden');
-                document.getElementById('sezioneCatechista').classList.add('hidden');
-            } else {
-                throw new Error(resText);
+                document.getElementById('sezioneReferente').classList.add('hidden');
+            } else { 
+                alert("Errore: " + res); 
+                btn.disabled = false; btn.innerText = "Conferma Appuntamento";
             }
         } catch(e) { 
-            alert("Errore: " + e.message);
-            btn.disabled = false; 
-            btn.innerText = "Conferma Appuntamento";
+            alert("Errore di rete."); 
+            btn.disabled = false; btn.innerText = "Conferma Appuntamento";
         }
     };
 </script>
