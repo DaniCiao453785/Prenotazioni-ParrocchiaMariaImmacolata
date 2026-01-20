@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prenotazione Incontri - Parrocchia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #6366f1; --glass: rgba(255, 255, 255, 0.95); --text: #1e293b; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientBG 15s ease infinite; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .container { background: var(--glass); backdrop-filter: blur(12px); padding: 30px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); width: 100%; max-width: 450px; border: 1px solid rgba(255, 255, 255, 0.6); }
+        h2 { text-align: center; font-weight: 800; color: #0f172a; margin-bottom: 20px; }
+        .step-label { font-weight: 700; font-size: 0.75rem; color: #4f46e5; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        input, select { width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #e2e8f0; border-radius: 14px; font-size: 1rem; outline: none; box-sizing: border-box; }
+        button { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .hidden { display: none; }
+        .spinner { border: 4px solid rgba(0,0,0,0.05); border-top: 4px solid #6366f1; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status-card { text-align: center; padding: 20px; border-radius: 14px; margin-top: 20px; font-weight: 700; border: 1px solid transparent; }
+        .success { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        .error { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 id="titolo">Prenotazione</h2>
+    
+    <div id="sezioneCatechista" class="hidden">
+        <span class="step-label">👤 Seleziona il Catechista</span>
+        <select id="selectCatechista"><option value="">-- Scegli il tuo catechista --</option></select>
+    </div>
+
+    <div id="loadingMsg" class="hidden">
+        <div class="spinner"></div>
+        <p style="text-align:center;">Caricamento date disponibili...</p>
+    </div>
+
+    <form id="bookingForm" class="hidden">
+        <span class="step-label">📝 Dati Genitore e Figlio</span>
+        <input type="text" id="genitore" placeholder="Nome Genitore" required>
+        <input type="text" id="figlio" placeholder="Nome Figlio" required>
+
+        <span class="step-label">📅 Giorno dell'incontro</span>
+        <select id="selectData" required><option value="">-- Scegli giorno --</option></select>
+        
+        <span class="step-label">🕒 Ora e Luogo</span>
+        <select id="selectOra" required disabled><option value="">-- Scegli ora --</option></select>
+
+        <button type="submit" id="btnInvia">Conferma Appuntamento</button>
+    </form>
+    <div id="status" class="status-card hidden"></div>
+</div>
+
+<script>
+    // URL aggiornato dello Script
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbxcpdOCsL-7yA_s42WVYwuv33nv-ZyuIBbAxeD-WVsCO_TEdw7zCH4zp9pUD3z1SVEY/exec";
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const gruppo = urlParams.get('gruppo') || "Catechismo";
+    const classeVal = urlParams.get('classe') || "Classe";
+    const nomeFoglio = gruppo + "-" + classeVal;
+    let datiRicevuti = [];
+
+    const mappaturaCatechisti = {
+        "ACR-5/6/7": ["Grazia e Rosaria", "Antonia e Rosanna"],
+        "Catechismo-3°Elementare": [
+            "Attanasio Anna", 
+            "Iannotti Luigi e Mellone Francesca Pia", 
+            "Barbaro Chiara, Contaldi Giuliana e Sbisà Rossella"
+        ],
+        "Catechismo-4°Elementare": ["Cupido Tina e Ianne Tiziana", "Monaco Carmela e Paglietta Valentina"]
+    };
+
+    document.getElementById('titolo').innerText = "Prenotazione " + classeVal;
+
+    if (urlParams.get('diviso') === 'si' && mappaturaCatechisti[nomeFoglio]) {
+        const select = document.getElementById('selectCatechista');
+        document.getElementById('sezioneCatechista').classList.remove('hidden');
+        mappaturaCatechisti[nomeFoglio].forEach(cat => {
+            let opt = document.createElement('option'); opt.value = cat; opt.text = cat;
+            select.appendChild(opt);
+        });
+    } else {
+        caricaDati(""); 
+    }
+
+    document.getElementById('selectCatechista').onchange = function() {
+        if (this.value) caricaDati(this.value);
+    };
+
+    async function caricaDati(catScelto) {
+        document.getElementById('loadingMsg').classList.remove('hidden');
+        document.getElementById('bookingForm').classList.add('hidden');
+        document.getElementById('status').classList.add('hidden');
+        
+        try {
+            const resp = await fetch(`${webAppUrl}?classe=${encodeURIComponent(nomeFoglio)}`);
+            const allData = await resp.json();
+            
+            if (catScelto === "") {
+                datiRicevuti = allData;
+            } else {
+                datiRicevuti = allData.filter(item => {
+                    let nFoglio = item.catechista ? item.catechista.trim().toLowerCase() : "";
+                    let nSito = catScelto.trim().toLowerCase();
+                    return nFoglio === nSito;
+                });
+            }
+
+            if (datiRicevuti.length === 0) {
+                alert("Nessun orario disponibile per questo catechista.");
+                document.getElementById('loadingMsg').classList.add('hidden');
+                return;
+            }
+
+            const selData = document.getElementById('selectData');
+            selData.innerHTML = '<option value="">-- Scegli giorno --</option>';
+            const dateUniche = [...new Set(datiRicevuti.map(item => item.data))];
+            dateUniche.forEach(d => {
+                let opt = document.createElement('option'); opt.value = d; opt.text = d;
+                selData.appendChild(opt);
+            });
+
+            document.getElementById('loadingMsg').classList.add('hidden');
+            document.getElementById('bookingForm').classList.remove('hidden');
+        } catch(e) { 
+            alert("Errore nel caricamento. Verifica che il nome del foglio Google sia: " + nomeFoglio); 
+            document.getElementById('loadingMsg').classList.add('hidden');
+        }
+    }
+
+    document.getElementById('selectData').onchange = function() {
+        const selOra = document.getElementById('selectOra');
+        selOra.innerHTML = '<option value="">-- Scegli ora --</option>';
+        datiRicevuti.filter(i => i.data === this.value).forEach(i => {
+            let opt = document.createElement('option');
+            opt.value = i.ora;
+            opt.text = i.ora + (i.luogo ? " (" + i.luogo + ")" : "");
+            selOra.appendChild(opt);
+        });
+        selOra.disabled = false;
+    };
+
+    document.getElementById('bookingForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnInvia');
+        const statusDiv = document.getElementById('status');
+        
+        btn.disabled = true; 
+        btn.innerText = "Salvataggio...";
+        
+        const params = new URLSearchParams({
+            genitore: document.getElementById('genitore').value,
+            figlio: document.getElementById('figlio').value,
+            ora: document.getElementById('selectOra').value,
+            classe: nomeFoglio
+        });
+
+        try {
+            // Invio tramite POST includendo i parametri nell'URL per bypassare blocchi CORS comuni con Apps Script
+            const r = await fetch(`${webAppUrl}?${params.toString()}`, { method: 'POST' });
+            const resText = await r.text();
+
+            if (resText.includes("OK")) {
+                statusDiv.innerHTML = "✅ Prenotazione effettuata con successo!";
+                statusDiv.className = "status-card success";
+                statusDiv.classList.remove('hidden');
+                document.getElementById('bookingForm').classList.add('hidden');
+                document.getElementById('sezioneCatechista').classList.add('hidden');
+            } else {
+                throw new Error(resText);
+            }
+        } catch(e) { 
+            alert("Errore: " + e.message);
+            btn.disabled = false; 
+            btn.innerText = "Conferma Appuntamento";
+        }
+    };
+</script>
+</body>
+</html>
