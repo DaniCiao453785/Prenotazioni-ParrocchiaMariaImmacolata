@@ -54,22 +54,21 @@
 </div>
 
 <script>
-    // URL AGGIORNATO
     const webAppUrl = "https://script.google.com/macros/s/AKfycbz79eC4mQs1J9lDhK0e_htwFfQN4mouY9GaDIGNeoOghltgIHkyR-yelHO74cc4oHS_/exec";
     
     const urlParams = new URLSearchParams(window.location.search);
     const gruppo = urlParams.get('gruppo') || "Catechismo";
     const classeVal = urlParams.get('classe') || "Classe";
-    const colore = urlParams.get('colore') ? "-" + urlParams.get('colore') : "";
-    const nomeFoglio = gruppo + "-" + classeVal + colore;
+    const coloreParam = urlParams.get('colore');
+    const nomeFoglio = gruppo + "-" + classeVal + (coloreParam ? "-" + coloreParam : "");
     
     const tipoReferente = (gruppo.toUpperCase() === "ACR") ? "Educatore" : "Catechista";
     document.getElementById('labelReferente').innerText = "👤 Seleziona " + tipoReferente;
-    document.getElementById('titolo').innerText = "Prenotazione " + classeVal + (urlParams.get('colore') ? " (" + urlParams.get('colore') + ")" : "");
+    document.getElementById('titolo').innerText = "Prenotazione " + classeVal + (coloreParam ? " (" + coloreParam + ")" : "");
 
     let datiRicevuti = [];
 
-    // Mappatura gruppi e nomi aggiornata
+    // Fogli che RICHIEDONO la scelta del nome
     const mappatura = {
         "ACR-5/6/7": ["Califano Rosaria e Petrosino Grazia Pia", "Pica Rosanna e Sica Antonia"],
         "Catechismo-3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
@@ -78,7 +77,9 @@
         "Catechismo-4°Elementare-Verde": ["Monaco Carmela e Paglietta Valentina"]
     };
 
+    // LOGICA DI AVVIO:
     if (mappatura[nomeFoglio]) {
+        // Se il foglio è nella lista, mostro il menu a tendina
         const select = document.getElementById('selectReferente');
         document.getElementById('sezioneReferente').classList.remove('hidden');
         mappatura[nomeFoglio].forEach(r => {
@@ -86,6 +87,7 @@
             select.appendChild(opt);
         });
     } else {
+        // SE IL FOGLIO NON HA SCELTE, CARICO TUTTO SUBITO
         caricaDati(""); 
     }
 
@@ -96,13 +98,17 @@
     async function caricaDati(refScelto) {
         document.getElementById('loadingMsg').classList.remove('hidden');
         document.getElementById('bookingForm').classList.add('hidden');
+        document.getElementById('status').classList.add('hidden');
+        
         try {
             const resp = await fetch(`${webAppUrl}?classe=${encodeURIComponent(nomeFoglio)}`);
             const allData = await resp.json();
             
-            datiRicevuti = refScelto === "" ? allData : allData.filter(item => item.referente.trim() === refScelto.trim());
+            // Se refScelto è vuoto (fogli semplici), prendo tutto. 
+            // Se refScelto ha un valore (fogli complessi), filtro per nome.
+            datiRicevuti = (refScelto === "") ? allData : allData.filter(item => item.referente && item.referente.trim() === refScelto.trim());
 
-            if (datiRicevuti.length === 0) {
+            if (!datiRicevuti || datiRicevuti.length === 0) {
                 alert("Nessun orario disponibile al momento.");
                 document.getElementById('loadingMsg').classList.add('hidden');
                 return;
@@ -118,7 +124,7 @@
             document.getElementById('loadingMsg').classList.add('hidden');
             document.getElementById('bookingForm').classList.remove('hidden');
         } catch(e) { 
-            alert("Errore caricamento. Verifica il nome del foglio: " + nomeFoglio); 
+            alert("Errore tecnico. Controlla che il foglio '" + nomeFoglio + "' esista nel database."); 
             document.getElementById('loadingMsg').classList.add('hidden');
         }
     }
@@ -129,7 +135,7 @@
         datiRicevuti.filter(i => i.data === this.value).forEach(i => {
             let opt = document.createElement('option');
             opt.value = i.ora;
-            opt.text = i.ora + " - Luogo: " + (i.luogo || "Non specificato");
+            opt.text = i.ora + " (" + (i.luogo || "Sede") + ")";
             selOra.appendChild(opt);
         });
         selOra.disabled = false;
@@ -150,20 +156,19 @@
 
         try {
             const r = await fetch(`${webAppUrl}?${params.toString()}`, { method: 'POST' });
-            const res = await r.text();
-            if (res.includes("OK")) {
-                document.getElementById('status').innerHTML = "✅ Prenotazione registrata con successo!";
+            if ((await r.text()).includes("OK")) {
+                document.getElementById('status').innerHTML = "✅ Prenotazione confermata!";
                 document.getElementById('status').className = "status-card success";
                 document.getElementById('status').classList.remove('hidden');
                 document.getElementById('bookingForm').classList.add('hidden');
                 document.getElementById('sezioneReferente').classList.add('hidden');
             } else { 
-                alert("Errore: " + res); 
+                alert("Posto già occupato!"); 
                 btn.disabled = false; btn.innerText = "Conferma Appuntamento";
             }
         } catch(e) { 
-            alert("Errore di rete."); 
-            btn.disabled = false; btn.innerText = "Conferma Appuntamento";
+            alert("Errore connessione."); 
+            btn.disabled = false; 
         }
     };
 </script>
