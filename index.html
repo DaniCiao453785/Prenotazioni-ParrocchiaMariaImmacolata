@@ -15,31 +15,14 @@
             min-height: 100vh; margin: 0; padding: 20px; 
         }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        
         .container { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); width: 100%; max-width: 450px; text-align: center; }
-        
         h2 { font-weight: 800; color: #1e293b; margin-bottom: 20px; }
         .info { font-weight: 600; color: #6366f1; margin-bottom: 20px; text-transform: uppercase; font-size: 0.9rem; }
-        
-        /* STILE ROTELLINA */
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: #6366f1;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #6366f1; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
         label { display: block; text-align: left; font-weight: 700; font-size: 0.75rem; color: #4f46e5; margin-bottom: 5px; margin-top: 15px; text-transform: uppercase; }
         input, select { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 14px; font-size: 1rem; outline: none; box-sizing: border-box; }
-        
         button { width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; margin-top: 25px; transition: 0.3s; }
-        button:hover { transform: scale(1.02); }
-        button:disabled { background: #cbd5e1; cursor: not-allowed; }
-
         .hidden { display: none; }
         #messaggio { margin-top: 20px; padding: 15px; border-radius: 14px; font-weight: 700; display: none; }
         .success { background: #dcfce7; color: #166534; }
@@ -50,11 +33,7 @@
 <div class="container">
     <h2 id="titolo">Prenotazione</h2>
     <div id="infoClasse" class="info">Verifica in corso...</div>
-
-    <div id="loading">
-        <div class="spinner"></div>
-        <p style="color: #64748b; font-size: 0.9rem;">Caricamento orari...</p>
-    </div>
+    <div id="loading"><div class="spinner"></div><p>Caricamento orari...</p></div>
 
     <div id="sezioneReferente" class="hidden">
         <label>👤 Seleziona Catechista/Educatore</label>
@@ -64,16 +43,12 @@
     <form id="bookingForm" class="hidden">
         <label>📝 Nome Genitore</label>
         <input type="text" id="genitore" placeholder="Inserisci il tuo nome" required>
-
         <label>👶 Nome Figlio/a</label>
         <input type="text" id="figlio" placeholder="Inserisci il nome del bambino" required>
-
         <label>📅 Scegli il Giorno</label>
         <select id="selectData" required><option value="">-- Seleziona Giorno --</option></select>
-
         <label>🕒 Scegli l'Ora</label>
         <select id="selectOra" required disabled><option value="">-- Seleziona prima il giorno --</option></select>
-
         <button type="submit" id="btnInvia">CONFERMA PRENOTAZIONE</button>
     </form>
     <div id="messaggio"></div>
@@ -93,21 +68,21 @@
     let datiRicevuti = [];
     const mappatura = {
         "ACR-5/6/7": ["Califano Rosaria e Petrosino Grazia Pia", "Pica Rosanna e Sica Antonia"],
-        "Catechismo-3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"]
+        "Catechismo-3°Elementare-Blu": ["Attanasio Anna", "Iannotti Luigi e Mellone Francesca Pia"],
+        "Catechismo-3°Elementare-Giallo": ["Barbaro Chiara, Contaldi Giuliana e Sbisà Rossella"],
+        "Catechismo-4°Elementare-Rosso": ["Cupido Tina e Ianne Tiziana"],
+        "Catechismo-4°Elementare-Verde": ["Monaco Carmela e Paglietta Valentina"]
     };
 
-    // Gestione Iniziale
     if (mappatura[nomeFoglio]) {
-        document.getElementById('loading').classList.add('hidden'); // Nascondo rotellina per mostrare scelta referente
+        document.getElementById('loading').classList.add('hidden');
         const select = document.getElementById('selectReferente');
         document.getElementById('sezioneReferente').classList.remove('hidden');
         mappatura[nomeFoglio].forEach(r => {
             let opt = document.createElement('option'); opt.value = r; opt.text = r;
             select.appendChild(opt);
         });
-    } else {
-        caricaDati(""); 
-    }
+    } else { caricaDati(""); }
 
     document.getElementById('selectReferente').onchange = function() {
         if (this.value) {
@@ -117,7 +92,7 @@
     };
 
     async function caricaDati(refScelto) {
-        document.getElementById('loading').classList.remove('hidden'); // Mostro rotellina
+        document.getElementById('loading').classList.remove('hidden');
         try {
             const resp = await fetch(`${webAppUrl}?classe=${encodeURIComponent(nomeFoglio)}`);
             const allData = await resp.json();
@@ -129,11 +104,9 @@
                 let opt = document.createElement('option'); opt.value = d; opt.text = d;
                 selData.appendChild(opt);
             });
-            document.getElementById('loading').classList.add('hidden'); // Nascondo rotellina
+            document.getElementById('loading').classList.add('hidden');
             document.getElementById('bookingForm').classList.remove('hidden');
-        } catch(e) { 
-            document.getElementById('loading').innerHTML = "<p style='color:red'>Errore caricamento. Riprova.</p>";
-        }
+        } catch(e) { document.getElementById('loading').innerHTML = "Errore caricamento."; }
     }
 
     document.getElementById('selectData').onchange = function() {
@@ -150,11 +123,14 @@
     document.getElementById('bookingForm').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnInvia');
-        btn.disabled = true; btn.innerText = "Invio in corso...";
+        btn.disabled = true; btn.innerText = "Salvataggio...";
+
+        // INVIO DATI CON FORZATURA STRINGA PER LA DATA
         const fd = new FormData();
         fd.append('classe', nomeFoglio);
         fd.append('genitore', document.getElementById('genitore').value);
         fd.append('figlio', document.getElementById('figlio').value);
+        fd.append('data', document.getElementById('selectData').value); // Passiamo esplicitamente la data scelta
         fd.append('ora', document.getElementById('selectOra').value);
 
         try {
@@ -165,7 +141,7 @@
                 msg.innerText = "✅ Prenotazione confermata!";
                 msg.className = "success"; msg.style.display = "block";
                 document.getElementById('bookingForm').classList.add('hidden');
-            } else { alert("Posto già occupato!"); btn.disabled = false; btn.innerText = "CONFERMA PRENOTAZIONE"; }
+            } else { alert("Errore o posto occupato!"); btn.disabled = false; btn.innerText = "CONFERMA PRENOTAZIONE"; }
         } catch(e) { alert("Errore connessione."); btn.disabled = false; }
     };
 </script>
